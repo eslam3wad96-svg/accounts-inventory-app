@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir source
           unzip -o accounts_inventory_source.zip -d source
-          flutter create . --platforms android --org com.accounts.inventory
+          flutter create . --project-name accounts_inventory_app --platforms android --org com.accounts.inventory
           cp source/pubspec.yaml pubspec.yaml
           rm -rf lib
           cp -r source/lib lib
