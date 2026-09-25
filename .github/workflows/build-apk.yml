@@ -29,7 +29,70 @@ jobs:
           rm -rf lib
           cp -r source/lib lib
           
-      - name: Fix source syntax
+      -      - name: Fix source syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("source/lib/main.dart")
+          s = p.read_text()
+
+          old = """   Expanded(child:ListView.builder(itemCount:rows.length,itemBuilder:(_,i){final r=rows[i];return Card(child:ListTile(title:Text(r['name']),subtitle:Text(r['phone']??''),leading:CircleAvatar(child:Text('${i+1}')),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit')await edit(r);if(v=='delete'){await DB.delete(widget.type=='customer'?'customers':'suppliers',r['id']);setState((){});}},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('تعديل')),PopupMenuItem(value:'delete',child:Text('حذف'))]),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>Statement(id:r['id'],name:r['name'],type:widget.type))));})), """
+
+          new = """   Expanded(
+      child: ListView.builder(
+        itemCount: rows.length,
+        itemBuilder: (_, i) {
+          final r = rows[i];
+          return Card(
+            child: ListTile(
+              title: Text(r['name']),
+              subtitle: Text(r['phone'] ?? ''),
+              leading: CircleAvatar(child: Text('${i + 1}')),
+              trailing: PopupMenuButton<String>(
+                onSelected: (v) async {
+                  if (v == 'edit') await edit(r);
+                  if (v == 'delete') {
+                    await DB.delete(
+                      widget.type == 'customer' ? 'customers' : 'suppliers',
+                      r['id'],
+                    );
+                    setState(() {});
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('تعديل')),
+                  PopupMenuItem(value: 'delete', child: Text('حذف')),
+                ],
+              ),
+              onTap: () => Navigator.push(
+                c,
+                MaterialPageRoute(
+                  builder: (_) => Statement(
+                    id: r['id'],
+                    name: r['name'],
+                    type: widget.type,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ), """
+
+          if old not in s:
+              raise SystemExit("Expected source block was not found")
+
+          s = s.replace(old, new)
+
+          s = s.replace(
+              "onSelectionChanged:(v)=>setState(()=>{kind=v.first;party=null;item=null;})",
+              "onSelectionChanged:(v){setState((){kind=v.first;party=null;item=null;});}"
+          )
+
+          p.write_text(s)
+          PY
         run: |
           sed -i "s/type:widget.type))));})),/type:widget.type)))));})),/" source/lib/main.dart
       - name: Install dependencies
