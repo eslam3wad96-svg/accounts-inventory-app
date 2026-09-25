@@ -28,7 +28,10 @@ jobs:
           cp source/pubspec.yaml pubspec.yaml
           rm -rf lib
           cp -r source/lib lib
-
+          
+      - name: Fix source syntax
+        run: |
+          sed -i "s/type:widget.type))));})),/type:widget.type)))));})),/" source/lib/main.dart
       - name: Install dependencies
         run: flutter pub get
 
